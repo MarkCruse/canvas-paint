@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>D3 Checkbox</title>
+
+   <style>
+     body {
+       margin: 4em;
+       padding: 0;
+       font-family: sans-serif;
+     }
+     #assignment_form {
+         font-size: .9em;
+         margin: 1em;
+     }
+   </style>
+</head>
+<body>
+    <div id="heading">
+        <p> </p>
+    </div>    
+    <div id="assignment_form">
+        <!--Select the assignments to be assessed:</p>-->
+    </div>
+    <div id="submit_button">
+        <p>&nbsp;</p>
+        <input type="submit" value="Submit Selections" id="x_submit", disabled>
+        </form>
+    </div>
+    <!--
+    <textarea id="resultText">
+        Lorem ipsum...
+    </textarea>
+    -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script>
+         
+        //var csv = 'https://github.com/MarkCruse/canvas-paint/blob/master/data/201910_test.csv'
+
+        var csv = 'https://raw.githubusercontent.com/MarkCruse/canvas-paint/master/data/201910_course_assignments_ukcore_web_file.csv'
+        var dataset = [];
+        d3.csv(csv, d3.autoType)
+            .then(function(data) {
+                filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "ABHAYS0" })
+                //filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "AMASK2" })
+                console.log(filtered)
+
+                d3.select("#heading")
+                    d3.selectAll("div")
+                    .data(filtered)
+                    .insert("p")
+                    .insert("b")
+                    d3.selectAll("#heading b")
+                        .data(filtered)
+                        .text(function(d) { 
+                            return d.Class +' '+ d.Section +' '  + '('+ d['Academic Term']+')'; 
+                        });
+                d3.select("#assignment_form")
+                    .selectAll("div")
+                    .data(filtered)
+                    .join("div")
+                    .append("input")
+                    .attr("type", "checkbox")
+                    .property("checked", false)
+                    
+                    .on('change', function() {
+                        renderValues(this.value);
+                    })
+                    
+                    .attr("id", function(d) { 
+                        //console.log(d['Assignment Name'], ' ID =',d['Assignment ID'])
+                        return 'id-' + d['Assignment ID']; })
+                    .on("change", function(d){
+                        enableBtn();            //enable the submit button
+                        arrayMgmnt(d['Assignment ID']);
+                    })
+
+                    d3.selectAll("#assignment_form div")
+                        .data(filtered)
+                        .append("label")
+                        .text(function(d) { 
+                            return d['Course Section'] +' '+ d['Assignment Name']; 
+                        });
+
+                d3.select("#x_submit")
+                    .on('click', function() {
+                        console.log('submit clicked', dataset)
+                        //sendMail();
+
+                    })
+                });
+
+        function enableBtn() {
+            document.getElementById("x_submit").disabled = false;
+        }
+        function disableBtn() {
+            document.getElementById("x_submit").disabled = true;
+            console.log('button disabled')
+        }
+        function isInArray(value, array) {
+            console.log(array.indexOf(value));
+        return array.indexOf(value);
+        }
+        function arrayMgmnt(assinment_id) {
+            if(typeof dataset[0] === 'undefined') {
+                dataset.push(assinment_id);
+            }
+            else {
+                check_exist = isInArray(assinment_id, dataset);
+                if(check_exist < 0) {
+                    dataset.push(assinment_id);
+                console.log(dataset);
+                }
+                else {
+                    dataset.splice(check_exist, 1); 
+                    console.log(dataset, dataset.length);
+                    if(dataset.length < 1) {
+                        disableBtn();
+                    }
+                }
+            }
+        }
+
+        function sendMail() {
+            var link = "mailto:mdcr226@uky.edu"
+                    + "&subject=" + escape("Results from Assessment")
+                    + "&body=" + escape(document.getElementById('resultText').value);
+        }
+    </script>
+</body>
+
+</html>
