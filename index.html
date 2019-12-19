@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>D3 Checkbox</title>
+    <title>Assignments to be Assessed</title>
 
    <style>
      body {
@@ -22,7 +22,6 @@
 </head>
 <body>
     <div id="heading">
-        <p> </p>
     </div>    
     <div id="assignment_form">
         <!--Select the assignments to be assessed:</p>-->
@@ -49,53 +48,90 @@
             .then(function(data) {
                 filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "ABHAYS0" })
                 //filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "AMASK2" })
-                console.log(filtered)
 
-                d3.select("#heading")
-                    d3.selectAll("div")
-                    .data(filtered)
-                    .insert("p")
-                    .insert("b")
-                    d3.selectAll("#heading b")
-                        .data(filtered)
-                        .text(function(d) { 
-                            return d.Class +' '+ d.Section +' '  + '('+ d['Academic Term']+')'; 
-                        });
-                d3.select("#assignment_form")
-                    .selectAll("div")
-                    .data(filtered)
-                    .join("div")
-                    .append("input")
-                    .attr("type", "checkbox")
-                    .property("checked", false)
-                    
-                    .on('change', function() {
-                        renderValues(this.value);
-                    })
-                    
-                    .attr("id", function(d) { 
-                        //console.log(d['Assignment Name'], ' ID =',d['Assignment ID'])
-                        return 'id-' + d['Assignment ID']; })
-                    .on("change", function(d){
-                        enableBtn();            //enable the submit button
-                        arrayMgmnt(d['Assignment ID']);
-                    })
-
-                    d3.selectAll("#assignment_form div")
-                        .data(filtered)
-                        .append("label")
-                        .text(function(d) { 
-                            return d['Course Section'] +' '+ d['Assignment Name']; 
-                        });
-
-                d3.select("#x_submit")
-                    .on('click', function() {
-                        console.log('submit clicked', dataset)
-                        //sendMail();
-
-                    })
+                //Sort the filtered list
+                filtered.sort(function(a, b) {
+                    return parseFloat(a['Course Section']) - parseFloat(b['Course Section']) &&  parseFloat(a['Assignment ID']) - parseFloat(b['Assignment ID']);
                 });
+                console.log(filtered);
 
+                //place all the unique values for Course Section in an array
+                const uniqueList = [];
+                const map = new Map();
+                for (const item of filtered) {
+                    if(!map.has(item['Course Section'])){
+                        map.set(item['Course Section'], true);    // set any value to Map
+                        uniqueList.push({CourseSection: item['Course Section'], AssignmentID: item['Assignment ID'], AcademicTerm: item['Academic Term']});
+                    }
+                }
+                console.log(uniqueList);
+
+                /*uniqueList.forEach(element => console.log(element));
+                uniqueList.forEach(function(element) {
+                    filterClass = filtered.filter(function(d){ return d['Course Section'] === element})
+                    //sort the list of objects on Assignment ID
+                    filterClass.sort(function(a, b) {
+                        return parseFloat(a['Assignment ID']) - parseFloat(b['Assignment ID']);
+                    });
+                    console.log(filterClass)
+
+                */
+                       d3.select("#heading")
+                        d3.selectAll("div")
+                            .data(filtered)
+                            .insert("h2")
+                            
+                            d3.selectAll("#assignment_form h2")
+                            .text(function(d) {
+                                return d['Primary Instructor Formatted Name']; 
+                            }); 
+                
+                        d3.select("#assignment_form")
+                            .selectAll("div")
+                            .data(filtered)
+                            .join("div")
+                            .append("input")
+                            .attr("type", "checkbox")
+                            .property("checked", false)
+                            
+                            .on('change', function() {
+                                renderValues(this.value);
+                            })
+                            
+                            .attr("id", function(d) { 
+                                //console.log(d['Assignment Name'], ' ID =',d['Assignment ID'])
+                                return 'id-' + d['Assignment ID']; })
+                            .on("change", function(d){
+                                enableBtn();            //enable the submit button
+                                arrayMgmnt(d['Assignment ID']);
+                            });
+
+                            d3.selectAll("#assignment_form div")
+                                .attr("id", function(d) { 
+                                    return "ID-"+d['Assignment ID']})
+                                .data(filtered)
+                                .append("label")
+                                .text(function(d) { 
+                                    return d['Assignment Name']; 
+                                });
+
+                            Object.keys(uniqueList).forEach(function(key) {
+                                //console.log(key, uniqueList[key].AssignmentID, uniqueList[key].CourseSection);
+                                
+                                searchAssignmentID = "#ID-"+uniqueList[key].AssignmentID
+                                console.log(searchAssignmentID)
+                                d3.select(searchAssignmentID)
+                                    .insert("h3")
+                                    .text(uniqueList[key].CourseSection + " (" +uniqueList[key].AcademicTerm+")")
+                                    .lower()
+                            });
+                        d3.select("#x_submit")
+                            .on('click', function() {
+                                console.log('submit clicked', dataset)
+                                //sendMail();
+
+                            })
+        });
         function enableBtn() {
             document.getElementById("x_submit").disabled = false;
         }
@@ -107,14 +143,14 @@
             console.log(array.indexOf(value));
         return array.indexOf(value);
         }
-        function arrayMgmnt(assinment_id) {
+        function arrayMgmnt(assignment_id) {
             if(typeof dataset[0] === 'undefined') {
-                dataset.push(assinment_id);
+                dataset.push(assignment_id);
             }
             else {
-                check_exist = isInArray(assinment_id, dataset);
+                check_exist = isInArray(assignment_id, dataset);
                 if(check_exist < 0) {
-                    dataset.push(assinment_id);
+                    dataset.push(assignment_id);
                 console.log(dataset);
                 }
                 else {
