@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <title>Assignments to be Assessed</title>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <title>Test UI for Canvas Assignments</title>
 
    <style>
      body {
@@ -14,28 +14,56 @@
        padding: 0;
        font-family: sans-serif;
      }
+     
      #assignment_form {
+         font-size: .95em;
+         margin-left: 1em;
+     }
+     .highlight-blue {
+         color: blue;
+     }
+     .highlight-red {
+         color: red;
+     }
+     
+     #confirmIt {
          font-size: .9em;
          margin: 1em;
+         line-height: 40%;
+     }
+     label {
+         display: block;
+         margin-left: 20px;
+     }
+     input {
+        float: left;
+        margin-left: -20px;
+        margin-right: 7px;
      }
    </style>
 </head>
 <body>
+
+<!--<div class="col-xs-12 col-lg-8" id="container">-->
     <div id="heading">
+        <h2>Assignments within course sections for primary instructor <span class="highlight-blue"></span></h2>
     </div>    
-    <div id="assignment_form">
+    <div id="box">
+    <p style="border:1px; border-style:solid; border-color:rgb(248, 54, 54); padding: 1em;">Select assignments for each course/section to be assessed. There are <span class="highlight-red"><b></b></span>course/sections from which to make selections. <br><br>Press the <i>Continue</i> button (bottom of page) when <u>all</u> assignments have been selected.</p>
+    </div>
+    <div class="col-xs-12 col-lg-6" id="assignment_form">
+    
         <!--Select the assignments to be assessed:</p>-->
+    </div>
+    <div id="confirmIt">
+        <p></p>
     </div>
     <div id="submit_button">
         <p>&nbsp;</p>
-        <input type="submit" value="Submit Selections" id="x_submit", disabled>
+        <input type="submit" value="Continue" id="x_submit", disabled>
         </form>
     </div>
-    <!--
-    <textarea id="resultText">
-        Lorem ipsum...
-    </textarea>
-    -->
+<!--</div>-->
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
     <script>
@@ -43,6 +71,13 @@
         //var csv = 'https://github.com/MarkCruse/canvas-paint/blob/master/data/201910_test.csv'
 
         var csv = 'https://raw.githubusercontent.com/MarkCruse/canvas-paint/master/data/201910_course_assignments_ukcore_web_file.csv'
+        
+        // get the width of the window to determine the size of the text area for the assignment name
+        var formDiv = document.getElementById("assignment_form");
+        var width = formDiv.clientWidth;
+        console.log('The width of the window:',width,'px')
+        
+        var form_width = 120;
         var dataset = [];
         d3.csv(csv, d3.autoType)
             .then(function(data) {
@@ -53,7 +88,7 @@
                 filtered.sort(function(a, b) {
                     return parseFloat(a['Course Section']) - parseFloat(b['Course Section']) &&  parseFloat(a['Assignment ID']) - parseFloat(b['Assignment ID']);
                 });
-                console.log(filtered);
+               //console.log(filtered);
 
                 //place all the unique values for Course Section in an array
                 const uniqueList = [];
@@ -64,27 +99,18 @@
                         uniqueList.push({CourseSection: item['Course Section'], AssignmentID: item['Assignment ID'], AcademicTerm: item['Academic Term']});
                     }
                 }
-                console.log(uniqueList);
-
-                /*uniqueList.forEach(element => console.log(element));
-                uniqueList.forEach(function(element) {
-                    filterClass = filtered.filter(function(d){ return d['Course Section'] === element})
-                    //sort the list of objects on Assignment ID
-                    filterClass.sort(function(a, b) {
-                        return parseFloat(a['Assignment ID']) - parseFloat(b['Assignment ID']);
-                    });
-                    console.log(filterClass)
-
-                */
                        d3.select("#heading")
-                        d3.selectAll("div")
+                        d3.selectAll("span")
                             .data(filtered)
-                            .insert("h2")
-                            
-                            d3.selectAll("#assignment_form h2")
+                            d3.selectAll("#heading span")
                             .text(function(d) {
-                                return d['Primary Instructor Formatted Name']; 
-                            }); 
+                                return d['Primary Instructor Formatted Name']
+                            });
+                        
+                        d3.selectAll("#box b")
+                            .text(uniqueList.length + ' ');
+                        //    .text('Select assignments for each course/section to be assessed. There are ' + uniqueList.length + ' course/sections. Be sure to click the <Continue> button at the bottom once all assignments have been selected.')
+
                 
                         d3.select("#assignment_form")
                             .selectAll("div")
@@ -93,7 +119,6 @@
                             .append("input")
                             .attr("type", "checkbox")
                             .property("checked", false)
-                            
                             .on('change', function() {
                                 renderValues(this.value);
                             })
@@ -103,7 +128,7 @@
                                 return 'id-' + d['Assignment ID']; })
                             .on("change", function(d){
                                 enableBtn();            //enable the submit button
-                                arrayMgmnt(d['Assignment ID']);
+                                arrayMgmnt(d);
                             });
 
                             d3.selectAll("#assignment_form div")
@@ -111,56 +136,76 @@
                                     return "ID-"+d['Assignment ID']})
                                 .data(filtered)
                                 .append("label")
-                                .text(function(d) { 
-                                    return d['Assignment Name']; 
-                                });
+                                
+                                .text(function(d) {     
+                                   return d['Assignment Name'];
 
+                            })
+
+                                
                             Object.keys(uniqueList).forEach(function(key) {
                                 //console.log(key, uniqueList[key].AssignmentID, uniqueList[key].CourseSection);
                                 
                                 searchAssignmentID = "#ID-"+uniqueList[key].AssignmentID
-                                console.log(searchAssignmentID)
+                               //console.log(searchAssignmentID)
                                 d3.select(searchAssignmentID)
                                     .insert("h3")
                                     .text(uniqueList[key].CourseSection + " (" +uniqueList[key].AcademicTerm+")")
                                     .lower()
                             });
-                        d3.select("#x_submit")
-                            .on('click', function() {
-                                console.log('submit clicked', dataset)
-                                //sendMail();
-
-                            })
+  
+                    d3.select("#x_submit")
+                        .on('click', function() {
+                            console.log(dataset);
+                            //sendMail();
+                            
+                            d3.select("#confirmIt")
+                            .selectAll("p")
+                            .data(dataset)
+                            .join("p")
+                            .text(function(d) {
+                                    console.log("here")
+                                    return d.assignmentID;
+                                });
+                    });
         });
         function enableBtn() {
             document.getElementById("x_submit").disabled = false;
         }
         function disableBtn() {
             document.getElementById("x_submit").disabled = true;
-            console.log('button disabled')
+           //console.log('button disabled')
         }
         function isInArray(value, array) {
-            console.log(array.indexOf(value));
-        return array.indexOf(value);
+           //console.log('search:',value, array.indexOf(value));
+            return array.indexOf(value);
         }
-        function arrayMgmnt(assignment_id) {
+
+        function arrayMgmnt(d) {
+            //console.log(d);
             if(typeof dataset[0] === 'undefined') {
-                dataset.push(assignment_id);
+                dataset.push({assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
             }
             else {
-                check_exist = isInArray(assignment_id, dataset);
+                searchSet=[];
+                dataset.forEach(function (item, index) {
+                    searchSet.push(item.assignmentID);
+                    //console.log(searchSet);
+                })
+                check_exist = isInArray(d['Assignment ID'], searchSet);
                 if(check_exist < 0) {
-                    dataset.push(assignment_id);
-                console.log(dataset);
+                    dataset.push({assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
+                //console.log(dataset);
                 }
                 else {
                     dataset.splice(check_exist, 1); 
-                    console.log(dataset, dataset.length);
+                   //console.log(dataset, dataset.length);
                     if(dataset.length < 1) {
                         disableBtn();
                     }
                 }
             }
+        //console.log(dataset);
         }
 
         function sendMail() {
@@ -168,6 +213,7 @@
                     + "&subject=" + escape("Results from Assessment")
                     + "&body=" + escape(document.getElementById('resultText').value);
         }
+
     </script>
 </body>
 
