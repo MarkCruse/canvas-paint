@@ -25,11 +25,16 @@
      .highlight-red {
          color: red;
      }
-     
+     hr {
+        background-color: dimgrey !important;
+        color: dimgrey !important;
+        border: solid 1px dimgrey !important;
+        height: 2px !important;
+    }
      #confirmIt {
-         font-size: .9em;
+         font-size: 1em;
          margin: 1em;
-         line-height: 40%;
+         //line-height: 60%;
      }
      label {
          display: block;
@@ -44,18 +49,19 @@
 </head>
 <body>
 
-<!--<div class="col-xs-12 col-lg-8" id="container">-->
+<div class="col-xs-12 col-lg-8" id="container">
     <div id="heading">
         <h2>Assignments within course sections for primary instructor <span class="highlight-blue"></span></h2>
     </div>    
     <div id="box">
     <p style="border:1px; border-style:solid; border-color:rgb(248, 54, 54); padding: 1em;">Select assignments for each course/section to be assessed. There are <span class="highlight-red"><b></b></span>course/sections from which to make selections. <br><br>Press the <i>Continue</i> button (bottom of page) when <u>all</u> assignments have been selected.</p>
     </div>
-    <div class="col-xs-12 col-lg-6" id="assignment_form">
+    <div id="assignment_form">
     
         <!--Select the assignments to be assessed:</p>-->
     </div>
     <div id="confirmIt">
+        <hr>
         <p></p>
     </div>
     <div id="submit_button">
@@ -63,7 +69,9 @@
         <input type="submit" value="Continue" id="x_submit", disabled>
         </form>
     </div>
-<!--</div>-->
+
+</div>
+
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
     <script>
@@ -73,11 +81,11 @@
         var csv = 'https://raw.githubusercontent.com/MarkCruse/canvas-paint/master/data/201910_course_assignments_ukcore_web_file.csv'
         
         // get the width of the window to determine the size of the text area for the assignment name
-        var formDiv = document.getElementById("assignment_form");
+        /*var formDiv = document.getElementById("assignment_form");
         var width = formDiv.clientWidth;
         console.log('The width of the window:',width,'px')
-        
-        var form_width = 120;
+        */
+        //var form_width = 120;
         var dataset = [];
         d3.csv(csv, d3.autoType)
             .then(function(data) {
@@ -128,6 +136,7 @@
                                 return 'id-' + d['Assignment ID']; })
                             .on("change", function(d){
                                 enableBtn();            //enable the submit button
+                                hideContinue;
                                 arrayMgmnt(d);
                             });
 
@@ -156,26 +165,41 @@
   
                     d3.select("#x_submit")
                         .on('click', function() {
-                            console.log(dataset);
                             //sendMail();
+                            
+                            //Sort the filtered list
+                            dataset.sort(function(a, b) {
+                                return parseFloat(a['courseSection']) - parseFloat(b['courseSection']);
+                            });
+                            dataset.sort(function(a, b) {
+                                return parseFloat(a['assignmentID']) - parseFloat(b['assignmentID']);
+                            });
                             
                             d3.select("#confirmIt")
                             .selectAll("p")
                             .data(dataset)
                             .join("p")
                             .text(function(d) {
-                                    console.log("here")
-                                    return d.assignmentID;
+                                choices = d.courseSection + ', ' + d.assignmentID + ', ' + d.assignmentName;
+                                return choices;
                                 });
+                            
+                        disableBtn();            //disable the continue button
                     });
         });
         function enableBtn() {
             document.getElementById("x_submit").disabled = false;
+            document.getElementById("x_submit").style.display = "block";
+            // If count of dataset > 0 then add other buttons  Add/Remove Elements, Link for Email
+
         }
         function disableBtn() {
             document.getElementById("x_submit").disabled = true;
-           //console.log('button disabled')
+            document.getElementById("x_submit").style.display = "none";
+            //Show the buttons Add/Remove Elements, Link for Email
         }
+
+
         function isInArray(value, array) {
            //console.log('search:',value, array.indexOf(value));
             return array.indexOf(value);
@@ -184,7 +208,7 @@
         function arrayMgmnt(d) {
             //console.log(d);
             if(typeof dataset[0] === 'undefined') {
-                dataset.push({assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
+                dataset.push({courseSection: d['Course Section'], assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
             }
             else {
                 searchSet=[];
@@ -194,7 +218,7 @@
                 })
                 check_exist = isInArray(d['Assignment ID'], searchSet);
                 if(check_exist < 0) {
-                    dataset.push({assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
+                    dataset.push({courseSection: d['Course Section'], assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
                 //console.log(dataset);
                 }
                 else {
