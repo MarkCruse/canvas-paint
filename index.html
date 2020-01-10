@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <title>Test UI for Canvas Assignments</title>
 
-   <style>
+  <style>
      body {
        margin: 4em;
        padding: 0;
@@ -29,9 +29,9 @@
         background-color: dimgrey !important;
         color: dimgrey !important;
         border: solid 1px dimgrey !important;
-        height: 2px !important;
+        height: 1px !important;
     }
-     #confirmIt {
+     #confirm_it {
          font-size: 1em;
          margin: 1em;
          //line-height: 60%;
@@ -45,6 +45,18 @@
         margin-left: -20px;
         margin-right: 7px;
      }
+     #confirm_click {
+        position: relative;
+        margin-left: 20px;
+     }
+     #send_it {
+        position: relative;
+        margin-left: 20px;
+        float: left;
+     }
+     span.confirm {
+     color: blue;
+     }
    </style>
 </head>
 <body>
@@ -52,22 +64,40 @@
 <div class="col-xs-12 col-lg-8" id="container">
     <div id="heading">
         <h2>Assignments within course sections for primary instructor <span class="highlight-blue"></span></h2>
-    </div>    
+    </div>
+
     <div id="box">
-    <p style="border:1px; border-style:solid; border-color:rgb(248, 54, 54); padding: 1em;">Select assignments for each course/section to be assessed. There are <span class="highlight-red"><b></b></span>course/sections from which to make selections. <br><br>Press the <i>Continue</i> button (bottom of page) when <u>all</u> assignments have been selected.</p>
+    <p style="border:1px; border-style:solid; border-color:rgb(248, 54, 54); padding: 1em;">Select assignments for each course/section to be assessed. There are <span class="highlight-red"><b></b></span>course/sections from which to make selections. <br><br>Press the <i>Confirm Selections</i> button (bottom of page) when <u>all</u> assignments have been selected.</p>
     </div>
     <div id="assignment_form">
     
         <!--Select the assignments to be assessed:</p>-->
     </div>
-    <div id="confirmIt">
-        <hr>
-        <p></p>
+    <div id="instructions_text_continue">
+        <h3>Confirmation of Selections<span class="highlight-blue"></span></h3>
+        <p><h4><span class="highlight-red">If all selections are correct, click the <b><i>Send</i></b> button below.</span></h4></p>
     </div>
-    <div id="submit_button">
+    <div id="confirm_it">
+        <span class="confirm">
+        <p></p>
+        </span>
+    </div>
+    <div id="confirm_button">
+        <hr>
+        <input type="submit" value="Confirm Selections" id="confirm_click" , disabled>
+    </div>
+
+    <div id="send_button">
         <p>&nbsp;</p>
-        <input type="submit" value="Continue" id="x_submit", disabled>
-        </form>
+        <input type="submit" value="Add/Remove Selections" id="change_it" , disabled>
+        <input type="submit" value="Send" id="send_it" , disabled>
+        <!--
+            <form action="mailto:mdcr226@uky.edu?subject=My%20Assignments%20for%20Assessment" method="post" enctype="text/plain">
+             <input type="submit" value="Send" id="send_it" , disabled>
+            </form>
+        -->
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
     </div>
 
 </div>
@@ -87,6 +117,10 @@
         */
         //var form_width = 120;
         var dataset = [];
+        var continue_clicked_track = 0;
+        document.getElementById("instructions_text_continue").style.display = "none";
+        disableConfirmBtn();
+        disableSendBtn();
         d3.csv(csv, d3.autoType)
             .then(function(data) {
                 filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "ABHAYS0" })
@@ -135,8 +169,8 @@
                                 //console.log(d['Assignment Name'], ' ID =',d['Assignment ID'])
                                 return 'id-' + d['Assignment ID']; })
                             .on("change", function(d){
-                                enableBtn();            //enable the submit button
-                                hideContinue;
+                                enableBtn();            //enable the confirm button
+                                disableSendBtn();
                                 arrayMgmnt(d);
                             });
 
@@ -162,41 +196,78 @@
                                     .text(uniqueList[key].CourseSection + " (" +uniqueList[key].AcademicTerm+")")
                                     .lower()
                             });
-  
-                    d3.select("#x_submit")
-                        .on('click', function() {
-                            //sendMail();
-                            
-                            //Sort the filtered list
-                            dataset.sort(function(a, b) {
-                                return parseFloat(a['courseSection']) - parseFloat(b['courseSection']);
-                            });
-                            dataset.sort(function(a, b) {
-                                return parseFloat(a['assignmentID']) - parseFloat(b['assignmentID']);
-                            });
-                            
-                            d3.select("#confirmIt")
-                            .selectAll("p")
-                            .data(dataset)
-                            .join("p")
-                            .text(function(d) {
-                                choices = d.courseSection + ', ' + d.assignmentID + ', ' + d.assignmentName;
-                                return choices;
+
+                            d3.select("#confirm_click")
+                                .on('click', function() {
+                                    //Sort the filtered list
+                                    dataset.sort(function(a, b) {
+                                    return parseFloat(a['courseSection']) - parseFloat(b['courseSection']);
+                                    });
+                                    dataset.sort(function(a, b) {
+                                    return parseFloat(a['assignmentID']) - parseFloat(b['assignmentID']);
+                                    });
+                                    document.getElementById("confirm_it").disabled = true;
+                                    document.getElementById("confirm_it").style.display = "block";
+                                    document.getElementById("instructions_text_continue").style.display = "block";
+                                    document.getElementById("assignment_form").style.display = "none";
+
+                                    d3.select("#confirm_it span")
+                                    .selectAll("p")
+                                    .data(dataset)
+                                    .join("p")
+                                    .text(function(d) {
+                                    
+//choices = d.courseSection + ', ' + d.assignmentID + ', ' + d.assignmentName;
+                                    choices = d.courseSection + ', ' + d.assignmentName;
+                                    return choices;
+                                    });
+                                    continue_clicked_track++;
+                                    enableBtn(); //disable the Confirm button enable the Send button
                                 });
-                            
-                        disableBtn();            //disable the continue button
-                    });
+                        d3.select("#send_it")
+                            .on('click', function() {
+                            sendMail(dataset);
+                            continue_clicked_track++;
+                            console.log(continue_clicked_track);
+                        });
+                        d3.select("#change_it")
+                            .on('click', function() {
+
+                            enableBtn(); //enable the confirm button
+                            document.getElementById("assignment_form").style.display = "block";
+                            disableSendBtn();
+                        });
         });
         function enableBtn() {
-            document.getElementById("x_submit").disabled = false;
-            document.getElementById("x_submit").style.display = "block";
+            document.getElementById("confirm_click").disabled = false;
+            document.getElementById("confirm_click").style.display = "block";
             // If count of dataset > 0 then add other buttons  Add/Remove Elements, Link for Email
+            if((continue_clicked_track > 0) && (dataset.length > 0)) {
+                document.getElementById("confirm_click").style.display = "none";
+                document.getElementById("send_it").disabled = false;
+                document.getElementById("send_it").style.display = "block";
+                document.getElementById("change_it").disabled = false;
+                document.getElementById("change_it").style.display = "block";
+                document.getElementById("box").style.display = "none";
+                document.getElementById("heading").style.display = "none";
+                continue_clicked_track = 0;
+
+            }
 
         }
-        function disableBtn() {
-            document.getElementById("x_submit").disabled = true;
-            document.getElementById("x_submit").style.display = "none";
-            //Show the buttons Add/Remove Elements, Link for Email
+        function disableConfirmBtn() {
+        document.getElementById("confirm_click").disabled = true;
+        document.getElementById("confirm_click").style.display = "none";
+        }
+
+        function disableSendBtn() {
+        document.getElementById("send_it").disabled = true;
+        document.getElementById("send_it").style.display = "none";
+        document.getElementById("confirm_it").disabled = true;
+        document.getElementById("confirm_it").style.display = "none";
+        document.getElementById("instructions_text_continue").style.display = "none";
+        document.getElementById("change_it").disabled = true;
+        document.getElementById("change_it").style.display = "none";
         }
 
 
@@ -217,25 +288,46 @@
                     //console.log(searchSet);
                 })
                 check_exist = isInArray(d['Assignment ID'], searchSet);
+                console.log(check_exist);
                 if(check_exist < 0) {
                     dataset.push({courseSection: d['Course Section'], assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name']});
+                    enableBtn();
                 //console.log(dataset);
                 }
                 else {
                     dataset.splice(check_exist, 1); 
                    //console.log(dataset, dataset.length);
                     if(dataset.length < 1) {
-                        disableBtn();
+                        disableConfirmBtn();
+                        disableSendBtn();
                     }
                 }
             }
         //console.log(dataset);
         }
 
-        function sendMail() {
+        function sendMail(dataset) {
+           /*
             var link = "mailto:mdcr226@uky.edu"
                     + "&subject=" + escape("Results from Assessment")
                     + "&body=" + escape(document.getElementById('resultText').value);
+            */
+            //var message_body = document.getElementById("message").value;
+            var theDate = new Date();
+            var message_body = "The following assignments were selected for assessment:\n";
+            var assignments = '';
+            dataset.forEach(element => assignments = assignments + '\n' + element.courseSection + ',' + element.assignmentID + ',"' + element.assignmentName +'",' + theDate.toLocaleString());
+
+            //var subject = document.getElementById("selectList").value;
+            message_body = message_body + assignments;
+
+            var subject = "Assessment Assignments";
+
+            document.location.href = "mailto:?subject="
+                + encodeURIComponent(subject)
+                + "&body=" + encodeURIComponent(message_body)
+                + "&target =_blank";
+
         }
 
     </script>
