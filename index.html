@@ -146,7 +146,7 @@
                             .data(filtered)
                             d3.selectAll("#heading span")
                             .text(function(d) {
-                                return d['Primary Instructor Formatted Name']
+                                return d['Primary Instructor Formatted Name'] + '-' +d['Academic Term']
                             });
                         
                         d3.selectAll("#box b")
