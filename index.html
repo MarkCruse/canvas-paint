@@ -126,16 +126,15 @@
         document.getElementById("instructions_text_continue").style.display = "none";
         disableConfirmBtn();
         disableSendBtn();
+        linkBlueID = window.location.search.substring(1);
         d3.csv(csv, d3.autoType)
             .then(function(data) {
-                filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "ABHAYS0" })
-                //filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == "AMASK2" })
+                filtered = data.filter(function(d){ return d['Primary Instructor Link BLue Id'] == linkBlueID })
 
                 //Sort the filtered list
                 filtered.sort(function(a, b) {
                     return parseFloat(a['Course Section']) - parseFloat(b['Course Section']) &&  parseFloat(a['Assignment ID']) - parseFloat(b['Assignment ID']);
                 });
-               //console.log(filtered);
 
                 //place all the unique values for Course Section in an array
                 const uniqueList = [];
@@ -197,7 +196,6 @@
                                 //console.log(key, uniqueList[key].AssignmentID, uniqueList[key].CourseSection);
                                 
                                 searchAssignmentID = "#ID-"+uniqueList[key].AssignmentID
-                               //console.log(searchAssignmentID)
                                 d3.select(searchAssignmentID)
                                     .insert("h3")
                                     .text(uniqueList[key].CourseSection + " (" +uniqueList[key].AcademicTerm+")")
@@ -287,7 +285,6 @@
         }
 
         function arrayMgmnt(d) {
-            //console.log(d);
             if(typeof dataset[0] === 'undefined') {
                 dataset.push({courseSection: d['Course Section'], assignmentID: d['Assignment ID'],assignmentName:  d['Assignment Name'], academicTerm: d['Academic Term']});
             }
@@ -295,34 +292,24 @@
                 searchSet=[];
                 dataset.forEach(function (item, index) {
                     searchSet.push(item.assignmentID);
-                    //console.log(searchSet);
                 })
                 check_exist = isInArray(d['Assignment ID'], searchSet);
                 console.log(check_exist);
                 if(check_exist < 0) {
                     dataset.push({courseSection: d['Course Section'], assignmentID: d['Assignment ID'],assignmentName: d['Assignment Name'], academicTerm: d['Academic Term']});
                     enableBtn();
-                //console.log(dataset);
                 }
                 else {
                     dataset.splice(check_exist, 1); 
-                   //console.log(dataset, dataset.length);
                     if(dataset.length < 1) {
                         disableConfirmBtn();
                         disableSendBtn();
                     }
                 }
             }
-        //console.log(dataset);
         }
 
         function sendMail(dataset) {
-           /*
-            var link = "mailto:mdcr226@uky.edu"
-                    + "&subject=" + escape("Results from Assessment")
-                    + "&body=" + escape(document.getElementById('resultText').value);
-            */
-            //var message_body = document.getElementById("message").value;
             var theDate = new Date();
             var message_body = "The following assignments were selected for assessment:\n";
             var assignments = '';
